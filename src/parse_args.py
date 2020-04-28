@@ -537,4 +537,4 @@ parser.add_argument(
     "--grid_search", action="store_true", help="Conduct grid search of hyperparameters"
 )
 
-default_args = parser.parse_args()
+default_args = parser.parse_known_args()

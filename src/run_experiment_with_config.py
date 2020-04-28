@@ -32,9 +32,10 @@ if __name__ == '__main__':
         'beta':0.05,
         'beam_size':128,
         'num_path_per_entity':-1,
-        'use_action_space_bucketing':True
+        'use_action_space_bucketing':True,
+        'gpu':0
 
     }
-    args = parser.parse_args()
+    args = parser.parse_known_args()
     [setattr(args,k,v) for k,v in config.items()]
     run_experiment(args)
