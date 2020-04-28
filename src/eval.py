@@ -13,7 +13,7 @@ import pickle
 
 import torch
 
-from src.parse_args import args
+from src.parse_args import default_args
 from src.data_utils import NO_OP_ENTITY_ID, DUMMY_ENTITY_ID
 
 
@@ -36,7 +36,7 @@ def hits_and_ranks(examples, scores, all_answers, verbose=False):
 
     # sort and rank
     top_k_scores, top_k_targets = torch.topk(
-        scores, min(scores.size(1), args.beam_size)
+        scores, min(scores.size(1), default_args.beam_size)
     )
     top_k_targets = top_k_targets.cpu().numpy()
 
@@ -101,7 +101,7 @@ def hits_at_k(examples, scores, all_answers, verbose=False):
 
     # sort and rank
     top_k_scores, top_k_targets = torch.topk(
-        scores, min(scores.size(1), args.beam_size)
+        scores, min(scores.size(1), default_args.beam_size)
     )
     top_k_targets = top_k_targets.cpu().numpy()
 
@@ -249,7 +249,7 @@ def export_error_cases(examples, scores, all_answers, output_path):
 
     # sort and rank
     top_k_scores, top_k_targets = torch.topk(
-        scores, min(scores.size(1), args.beam_size)
+        scores, min(scores.size(1), default_args.beam_size)
     )
     top_k_targets = top_k_targets.cpu().numpy()
 
