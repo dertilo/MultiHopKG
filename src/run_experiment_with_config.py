@@ -36,6 +36,6 @@ if __name__ == '__main__':
         'gpu':0
 
     }
-    args = parser.parse_known_args()
+    args,_ = parser.parse_known_args()
     [setattr(args,k,v) for k,v in config.items()]
     run_experiment(args)
