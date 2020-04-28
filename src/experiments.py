@@ -18,7 +18,6 @@ import random
 import torch
 
 from src.parse_args import parser
-from src.parse_args import args
 import src.data_utils as data_utils
 import src.eval
 from src.hyperparameter_range import hp_range
@@ -33,7 +32,6 @@ from src.utils.ops import flatten, to_cuda, device
 
 # torch.cuda.set_device(args.gpu)
 
-torch.manual_seed(args.seed)
 # torch.cuda.manual_seed_all(args.seed)
 
 def process_data():
@@ -216,7 +214,7 @@ def construct_model(args):
         raise NotImplementedError
     return lf
 
-def train(lf):
+def train(lf,args):
     train_path = data_utils.get_train_path(args)
     dev_path = os.path.join(args.data_dir, 'dev.triples')
     entity_index_path = os.path.join(args.data_dir, 'entity2id.txt')
@@ -234,7 +232,7 @@ def train(lf):
         lf.load_checkpoint(args.checkpoint_path)
     lf.run_train(train_data, dev_data)
 
-def inference(lf):
+def inference(lf,args):
     lf.batch_size = args.dev_batch_size
     lf.eval()
     if args.model == 'hypere':
@@ -465,19 +463,19 @@ def run_ablation_studies(args):
         seen_ratio, seen_mrrs['ours']['full_kg'], seen_mrrs['-rs']['full_kg'], rel_change(seen_mrrs, '-rs', 'full_kg'), seen_mrrs['-ad']['full_kg'], rel_change(seen_mrrs, '-ad', 'full_kg'),
         unseen_ratio, unseen_mrrs['ours']['full_kg'], unseen_mrrs['-rs']['full_kg'], rel_change(unseen_mrrs, '-rs', 'full_kg'), unseen_mrrs['-ad']['full_kg'], rel_change(unseen_mrrs, '-ad', 'full_kg')))
 
-def export_to_embedding_projector(lf):
+def export_to_embedding_projector(lf,args):
     lf.load_checkpoint(get_checkpoint_path(args))
     lf.export_to_embedding_projector()
 
-def export_reward_shaping_parameters(lf):
+def export_reward_shaping_parameters(lf,args):
     lf.load_checkpoint(get_checkpoint_path(args))
     lf.export_reward_shaping_parameters()
 
-def export_fuzzy_facts(lf):
+def export_fuzzy_facts(lf,args):
     lf.load_checkpoint(get_checkpoint_path(args))
     lf.export_fuzzy_facts()
 
-def export_error_cases(lf):
+def export_error_cases(lf,args):
     lf.load_checkpoint(get_checkpoint_path(args))
     lf.batch_size = args.dev_batch_size
     lf.eval()
@@ -491,7 +489,7 @@ def export_error_cases(lf):
     src.eval.hits_and_ranks(dev_data, pred_scores, lf.kg.dev_objects, verbose=True)
     src.eval.export_error_cases(dev_data, pred_scores, lf.kg.dev_objects, os.path.join(lf.model_dir, 'error_cases.pkl'))
 
-def compute_fact_scores(lf):
+def compute_fact_scores(lf,args):
     data_dir = args.data_dir
     train_path = os.path.join(data_dir, 'train.triples')
     dev_path = os.path.join(data_dir, 'dev.triples')
@@ -517,7 +515,7 @@ def get_checkpoint_path(args):
     else:
         return args.checkpoint_path
 
-def load_configs(config_path):
+def load_configs(config_path,args):
     with open(config_path) as f:
         print('loading configuration file {}'.format(config_path))
         for line in f:
@@ -744,30 +742,25 @@ def run_experiment(args):
                 to_cuda(lf)
 
                 if args.train:
-                    train(lf)
+                    train(lf,args)
                 elif args.inference:
-                    inference(lf)
+                    inference(lf,args)
                 elif args.eval_by_relation_type:
-                    inference(lf)
+                    inference(lf,args)
                 elif args.eval_by_seen_queries:
-                    inference(lf)
+                    inference(lf,args)
                 elif args.export_to_embedding_projector:
-                    export_to_embedding_projector(lf)
+                    export_to_embedding_projector(lf,args)
                 elif args.export_reward_shaping_parameters:
-                    export_reward_shaping_parameters(lf)
+                    export_reward_shaping_parameters(lf,args)
                 elif args.compute_fact_scores:
-                    compute_fact_scores(lf)
+                    compute_fact_scores(lf,args)
                 elif args.export_fuzzy_facts:
-                    export_fuzzy_facts(lf)
+                    export_fuzzy_facts(lf,args)
                 elif args.export_error_cases:
-                    export_error_cases(lf)
+                    export_error_cases(lf,args)
 
 if __name__ == '__main__':
-    import shlex
-
-    argString = '''
-     --data_dir data/NELL-995     --train     --model point     --bandwidth 256     --entity_dim 200     --relation_dim 200     --history_dim 200     --history_num_layers 3     --num_rollouts 20     --num_rollout_steps 3     --bucket_interval 5     --num_epochs 1000     --num_wait_epochs 100     --num_peek_epochs 2     --batch_size 128     --train_batch_size 128     --dev_batch_size 16     --margin -1     --learning_rate 0.001     --baseline n/a     --grad_norm 5     --emb_dropout_rate 0.3     --ff_dropout_rate 0.1     --action_dropout_rate 0.3     --action_dropout_anneal_interval 1000          --beta 0.05     --beam_size 128     --num_paths_per_entity -1          --use_action_space_bucketing     --gpu 0
-    '''
-    args = parser.parse_args(shlex.split(argString))
-
+    args = parser.parse_args()
+    torch.manual_seed(args.seed)
     run_experiment(args)
