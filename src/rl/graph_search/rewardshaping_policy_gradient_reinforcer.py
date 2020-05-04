@@ -35,7 +35,7 @@ class RewardShapingPolicyGradient(PolicyGradient):
 
         fn_model = self.fn_model
         if fn_model in ["conve"]:
-            fn_state_dict = torch.load(args.conve_state_dict_path)
+            fn_state_dict = torch.load(args.conve_state_dict_path,map_location=lambda storage, loc: storage)
             fn_nn_state_dict = get_conve_nn_state_dict(fn_state_dict)
             fn_kg_state_dict = get_conve_kg_state_dict(fn_state_dict)
             self.fn.load_state_dict(fn_nn_state_dict)
@@ -93,7 +93,7 @@ class RewardShapingPolicyGradient(PolicyGradient):
             mini_batch_size = len(mini_batch)
             if len(mini_batch) < self.batch_size:
                 self.make_full_batch(mini_batch, self.batch_size)
-            e1, e2, r = self.convert_tuples_to_tensors(mini_batch)
+            e1, e2, r = self.convert_tuples_to_tensors(mini_batch,num_labels=self.kg.num_entities)
             if self.fn_secondary_kg:
                 pred_score = fn.forward_fact(e1, r, e2, fn_kg, [self.fn_secondary_kg])
             else:
